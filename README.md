@@ -60,6 +60,19 @@ The assessment generates a report showing:
 - Specific recommendations
 - Resource usage analysis
 
+## Example
+
+Command to assess a specific namespace:
+
+```bash
+aca-assess assess --namespace my-wordpress
+```
+
+Example output:
+
+![Example Assessment Report](docs/example-report.png)
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests.
