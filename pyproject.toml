@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aca-assessor"
+description = "A tool to assess Kubernetes applications for Azure Container Apps compatibility"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["kubernetes", "azure", "container-apps", "assessment"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "kubernetes>=29.0.0",
+    "pyyaml>=6.0.1",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "azure-mgmt-containerinstance>=10.1.0",
+    "azure-identity>=1.15.0",
+    "tabulate>=0.9.0",
+]
+dynamic = ["version"]
+
+[tool.setuptools.packages.find]
+include = ["aca_assessor*"]
+
+[project.scripts]
+aca-assess = "aca_assessor.cli:cli"
