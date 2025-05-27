@@ -23,15 +23,18 @@ def assess(namespace):
         analyzer = ACAAnalyzer()
 
         # Collect deployments
-        console.print("[yellow]Collecting deployment information...[/yellow]")
+        if namespace:
+            console.print(f"[yellow]Collecting deployment information from namespace: {namespace}...[/yellow]")
+        else:
+            console.print("[yellow]Collecting deployment information from all namespaces...[/yellow]")
+            
         deployments = collector.collect_deployments(namespace)
 
         if not deployments:
             console.print("[red]No deployments found in the specified namespace(s)[/red]")
             return
 
-        # Analyze deployments
-        console.print("[yellow]Analyzing compatibility with Azure Container Apps...[/yellow]")
+        # Analyze deployments - progress is shown by the analyzer
         analysis_results = analyzer.analyze_deployments(deployments)
 
         # Generate and display report

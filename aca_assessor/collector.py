@@ -5,6 +5,7 @@ from typing import Dict, List, Any
 from kubernetes import client, config
 from rich.console import Console
 from rich.table import Table
+from rich.progress import Progress, TextColumn, BarColumn, SpinnerColumn
 
 console = Console()
 
@@ -24,11 +25,36 @@ class KubernetesCollector:
         """Collect all deployments in the specified namespace or all namespaces."""
         try:
             if namespace:
+                # Single namespace collection
                 deployments = self.apps_v1.list_namespaced_deployment(namespace)
+                return self._process_deployments(deployments.items)
             else:
-                deployments = self.apps_v1.list_deployment_for_all_namespaces()
-            
-            return self._process_deployments(deployments.items)
+                # Multiple namespace collection - show progress
+                namespaces = self.v1.list_namespace()
+                
+                all_deployments = []
+                
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[bold blue]{task.description}"),
+                    BarColumn(),
+                    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                    console=console
+                ) as progress:
+                    task = progress.add_task(f"[yellow]Collecting deployments from all namespaces...", total=len(namespaces.items))
+                    
+                    for ns in namespaces.items:
+                        progress.update(task, description=f"[yellow]Collecting from namespace: {ns.metadata.name}")
+                        try:
+                            deployments = self.apps_v1.list_namespaced_deployment(ns.metadata.name)
+                            all_deployments.extend(deployments.items)
+                        except Exception as e:
+                            console.print(f"[red]Error collecting from namespace {ns.metadata.name}: {str(e)}[/red]")
+                        
+                        progress.advance(task)
+                
+                return self._process_deployments(all_deployments)
+        
         except Exception as e:
             console.print(f"[red]Error collecting deployments: {str(e)}[/red]")
             return []

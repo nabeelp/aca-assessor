@@ -4,6 +4,7 @@ Analyzer module for ACA compatibility assessment.
 from typing import Dict, List, Any
 from rich.console import Console
 from rich.table import Table
+from rich.progress import Progress, TextColumn, BarColumn, SpinnerColumn
 
 console = Console()
 
@@ -22,24 +23,37 @@ class ACAAnalyzer:
         """Analyze deployments for ACA compatibility."""
         analysis_results = []
         
-        for deployment in deployments:
-            analysis = {
-                'name': deployment['name'],
-                'namespace': deployment['namespace'],
-                'compatibility_issues': [],
-                'recommendations': [],
-                'compatibility_score': 100  # Start with perfect score and deduct based on issues
-            }
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[bold blue]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            console=console
+        ) as progress:
+            task = progress.add_task("[yellow]Analyzing deployments...", total=len(deployments))
+            
+            for deployment in deployments:
+                progress.update(task, description=f"[yellow]Analyzing {deployment['namespace']}/{deployment['name']}")
+                
+                analysis = {
+                    'name': deployment['name'],
+                    'namespace': deployment['namespace'],
+                    'compatibility_issues': [],
+                    'recommendations': [],
+                    'compatibility_score': 100  # Start with perfect score and deduct based on issues
+                }
 
-            # Analyze each aspect
-            self._analyze_resources(deployment, analysis)
-            self._analyze_volumes(deployment, analysis)
-            self._analyze_networking(deployment, analysis)
-            self._analyze_scaling(deployment, analysis)
+                # Analyze each aspect
+                self._analyze_resources(deployment, analysis)
+                self._analyze_volumes(deployment, analysis)
+                self._analyze_networking(deployment, analysis)
+                self._analyze_scaling(deployment, analysis)
 
-            # Calculate final score
-            analysis['compatibility_score'] = max(0, analysis['compatibility_score'])
-            analysis_results.append(analysis)
+                # Calculate final score
+                analysis['compatibility_score'] = max(0, analysis['compatibility_score'])
+                analysis_results.append(analysis)
+                
+                progress.advance(task)
 
         return analysis_results
 

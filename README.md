@@ -10,6 +10,7 @@ A tool to assess Kubernetes applications for Azure Container Apps compatibility.
 - Analyzes networking settings
 - Provides compatibility scores and recommendations
 - Generates detailed reports
+- Displays progress during assessment of multiple namespaces
 
 ## Installation
 
@@ -33,6 +34,8 @@ To assess all applications in your Kubernetes cluster:
 ```bash
 aca-assess assess
 ```
+
+This will show progress as it processes each namespace and analyzes all deployments.
 
 To assess applications in a specific namespace:
 
