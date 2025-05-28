@@ -43,6 +43,42 @@ To assess applications in a specific namespace:
 aca-assess assess --namespace my-namespace
 ```
 
+### Configuration File
+
+ACA Assessor supports using a YAML configuration file to exclude namespaces from assessment.
+
+To generate a default configuration file:
+
+```bash
+aca-assess assess --init-config
+```
+
+This creates an `aca-assessor.yaml` file in the current directory with example settings.
+
+To use a specific configuration file:
+
+```bash
+aca-assess assess --config /path/to/my-config.yaml
+```
+
+Example configuration file:
+
+```yaml
+# ACA Assessor Configuration File
+
+assessment:
+  # List of namespaces to exclude from assessment
+  excluded_namespaces:
+    - kube-system
+    - kube-public
+    - istio-system
+```
+
+By default, ACA Assessor looks for a configuration file in these locations:
+- `~/.aca-assessor.yaml` (user's home directory)
+- `./.aca-assessor.yaml` (current directory)
+- `./aca-assessor.yaml` (current directory)
+
 ## Assessment Criteria
 
 The tool checks for:

@@ -1,0 +1,12 @@
+# ACA Assessor Configuration File
+
+assessment:
+  # List of namespaces to exclude from assessment
+  # These namespaces will be skipped when collecting deployments
+  excluded_namespaces:
+    - kube-system     # Kubernetes system namespace
+    - kube-public     # Kubernetes public namespace
+    - kube-node-lease # Kubernetes node lease namespace
+    - default         # Default namespace
+    - istio-system    # Example service mesh namespace
+    # Add more namespaces as needed
