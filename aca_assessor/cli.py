@@ -15,9 +15,17 @@ def cli():
 
 @cli.command()
 @click.option('--namespace', '-n', help='Kubernetes namespace to analyze. If not specified, analyzes all namespaces.')
-def assess(namespace):
+@click.option('--exclude-namespaces', help='Comma-separated list of namespaces to exclude from assessment.')
+def assess(namespace, exclude_namespaces):
     """Assess Kubernetes applications for ACA compatibility."""
     try:
+        # Parse excluded namespaces
+        excluded_ns_list = []
+        if exclude_namespaces:
+            excluded_ns_list = [ns.strip() for ns in exclude_namespaces.split(',') if ns.strip()]
+            if excluded_ns_list:
+                console.print(f"[yellow]Excluding namespaces: {', '.join(excluded_ns_list)}[/yellow]")
+
         # Initialize collector and analyzer
         collector = KubernetesCollector()
         analyzer = ACAAnalyzer()
@@ -28,7 +36,7 @@ def assess(namespace):
         else:
             console.print("[yellow]Collecting deployment information from all namespaces...[/yellow]")
             
-        deployments = collector.collect_deployments(namespace)
+        deployments = collector.collect_deployments(namespace, excluded_ns_list)
 
         if not deployments:
             console.print("[red]No deployments found in the specified namespace(s)[/red]")

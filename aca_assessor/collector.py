@@ -21,11 +21,17 @@ class KubernetesCollector:
             console.print(f"[red]Failed to connect to Kubernetes cluster: {str(e)}[/red]")
             raise
 
-    def collect_deployments(self, namespace: str = None) -> List[Dict[str, Any]]:
+    def collect_deployments(self, namespace: str = None, excluded_namespaces: List[str] = None) -> List[Dict[str, Any]]:
         """Collect all deployments in the specified namespace or all namespaces."""
+        if excluded_namespaces is None:
+            excluded_namespaces = []
+            
         try:
             if namespace:
                 # Single namespace collection
+                if namespace in excluded_namespaces:
+                    console.print(f"[yellow]Skipping excluded namespace: {namespace}[/yellow]")
+                    return []
                 deployments = self.apps_v1.list_namespaced_deployment(namespace)
                 return self._process_deployments(deployments.items)
             else:
@@ -33,6 +39,7 @@ class KubernetesCollector:
                 namespaces = self.v1.list_namespace()
                 
                 all_deployments = []
+                skipped_namespaces = []
                 
                 with Progress(
                     SpinnerColumn(),
@@ -44,14 +51,24 @@ class KubernetesCollector:
                     task = progress.add_task(f"[yellow]Collecting deployments from all namespaces...", total=len(namespaces.items))
                     
                     for ns in namespaces.items:
-                        progress.update(task, description=f"[yellow]Collecting from namespace: {ns.metadata.name}")
-                        try:
-                            deployments = self.apps_v1.list_namespaced_deployment(ns.metadata.name)
-                            all_deployments.extend(deployments.items)
-                        except Exception as e:
-                            console.print(f"[red]Error collecting from namespace {ns.metadata.name}: {str(e)}[/red]")
+                        ns_name = ns.metadata.name
+                        
+                        if ns_name in excluded_namespaces:
+                            progress.update(task, description=f"[yellow]Skipping excluded namespace: {ns_name}")
+                            skipped_namespaces.append(ns_name)
+                        else:
+                            progress.update(task, description=f"[yellow]Collecting from namespace: {ns_name}")
+                            try:
+                                deployments = self.apps_v1.list_namespaced_deployment(ns_name)
+                                all_deployments.extend(deployments.items)
+                            except Exception as e:
+                                console.print(f"[red]Error collecting from namespace {ns_name}: {str(e)}[/red]")
                         
                         progress.advance(task)
+                
+                # Report skipped namespaces
+                if skipped_namespaces:
+                    console.print(f"[yellow]Skipped {len(skipped_namespaces)} excluded namespace(s): {', '.join(skipped_namespaces)}[/yellow]")
                 
                 return self._process_deployments(all_deployments)
         
